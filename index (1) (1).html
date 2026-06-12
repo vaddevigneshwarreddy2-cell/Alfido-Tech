@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowledge Check — Quiz App</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.6.0/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff;
+      --bg-sec: #f5f5f2;
+      --bg-tert: #eeede9;
+      --text: #1a1a18;
+      --text-sec: #6b6b66;
+      --text-tert: #a0a099;
+      --border: rgba(0,0,0,0.12);
+      --border-sec: rgba(0,0,0,0.22);
+      --r-md: 8px;
+      --r-lg: 12px;
+      --r-xl: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1c;
+        --bg-sec: #2a2a27;
+        --bg-tert: #333330;
+        --text: #f0efeb;
+        --text-sec: #9e9d97;
+        --text-tert: #6b6b65;
+        --border: rgba(255,255,255,0.12);
+        --border-sec: rgba(255,255,255,0.22);
+      }
+    }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-tert); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem; }
+    #app { width: 100%; max-width: 620px; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    h1 { font-size: 22px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .sub { font-size: 14px; color: var(--text-sec); margin-bottom: 1.5rem; }
+    .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .cat-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 1rem; cursor: pointer; text-align: center; transition: border-color 0.15s, background 0.15s; }
+    .cat-card:hover { border-color: var(--border-sec); background: var(--bg-sec); }
+    .cat-card.selected { border: 1.5px solid #1D9E75; background: #E1F5EE; }
+    .cat-card i { font-size: 24px; display: block; margin-bottom: 6px; color: var(--text-sec); }
+    .cat-card.selected i { color: #0F6E56; }
+    .cat-card span { font-size: 13px; font-weight: 500; }
+    .difficulty-row { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+    .diff-btn { flex: 1; padding: 8px; border-radius: var(--r-md); border: 0.5px solid var(--border-sec); background: transparent; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text); transition: all 0.15s; }
+    .diff-btn.selected { background: #AFA9EC; border-color: #534AB7; color: #26215C; }
+    .diff-btn:hover:not(.selected) { background: var(--bg-sec); }
+    #start-btn { width: 100%; padding: 12px; border-radius: var(--r-md); background: #1D9E75; border: none; color: #fff; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+    #start-btn:hover { background: #0F6E56; }
+    #start-btn:disabled { background: var(--bg-sec); color: var(--text-tert); cursor: not-allowed; }
+    .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .q-count { font-size: 13px; color: var(--text-sec); }
+    .timer { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+    .timer.warn { color: #D85A30; }
+    .progress-bar-wrap { height: 4px; background: var(--bg-sec); border-radius: 2px; margin-bottom: 1.5rem; }
+    .progress-bar { height: 4px; background: #1D9E75; border-radius: 2px; transition: width 0.3s; }
+    .question-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 1.25rem; margin-bottom: 1rem; }
+    .q-category { font-size: 11px; font-weight: 500; color: #0F6E56; background: #E1F5EE; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+    .q-text { font-size: 16px; line-height: 1.6; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+    .opt-btn { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; text-align: left; font-size: 14px; color: var(--text); cursor: pointer; transition: all 0.15s; display: flex; align-items: flex-start; gap: 8px; }
+    .opt-btn:hover:not(:disabled) { border-color: var(--border-sec); background: var(--bg-sec); }
+    .opt-btn .opt-label { font-size: 11px; font-weight: 500; color: var(--text-sec); min-width: 16px; flex-shrink: 0; }
+    .opt-btn.correct { background: #E1F5EE; border-color: #1D9E75; }
+    .opt-btn.correct .opt-label { color: #0F6E56; }
+    .opt-btn.wrong { background: #FAECE7; border-color: #D85A30; }
+    .opt-btn.wrong .opt-label { color: #993C1D; }
+    .opt-btn:disabled { cursor: default; }
+    .explanation { background: var(--bg-sec); border-left: 3px solid #1D9E75; border-radius: 0 var(--r-md) var(--r-md) 0; padding: 10px 14px; font-size: 13px; color: var(--text-sec); line-height: 1.6; margin-bottom: 1rem; display: none; }
+    .explanation.show { display: block; }
+    #next-btn { width: 100%; padding: 11px; border-radius: var(--r-md); border: 0.5px solid var(--border-sec); background: transparent; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--text); transition: all 0.15s; display: none; }
+    #next-btn:hover { background: var(--bg-sec); }
+    #next-btn.show { display: block; }
+    .result-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
+    .score-ring { width: 100px; height: 100px; margin: 0 auto 1rem; position: relative; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-pct { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 22px; font-weight: 500; color: var(--text); }
+    .result-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+    .result-sub-msg { font-size: 13px; color: var(--text-sec); margin-bottom: 1.25rem; }
+    .stats-row { display: flex; justify-content: center; gap: 2rem; }
+    .stat { text-align: center; }
+    .stat-val { font-size: 20px; font-weight: 500; }
+    .stat-label { font-size: 11px; color: var(--text-sec); margin-top: 2px; }
+    .review-list { margin-bottom: 1.5rem; }
+    .review-item { border: 0.5px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; }
+    .review-item.correct { border-left: 3px solid #1D9E75; }
+    .review-item.wrong { border-left: 3px solid #D85A30; }
+    .review-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+    .review-icon.correct { color: #1D9E75; }
+    .review-icon.wrong { color: #D85A30; }
+    .review-q { font-size: 13px; line-height: 1.5; margin-bottom: 3px; }
+    .review-ans { font-size: 12px; color: var(--text-sec); }
+    .review-ans span { font-weight: 500; color: #0F6E56; }
+    #restart-btn { width: 100%; padding: 12px; border-radius: var(--r-md); background: #1D9E75; border: none; color: #fff; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+    #restart-btn:hover { background: #0F6E56; }
+    @media (max-width: 480px) { .options-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- Home Screen -->
+  <div id="screen-home" class="screen active">
+    <h1>Knowledge check</h1>
+    <p class="sub">Pick a category and test yourself — 8 questions, timed.</p>
+    <div class="category-grid" id="cat-grid"></div>
+    <p class="sub" style="margin-bottom:10px;">Difficulty</p>
+    <div class="difficulty-row">
+      <button class="diff-btn selected" data-diff="easy">Easy</button>
+      <button class="diff-btn" data-diff="medium">Medium</button>
+      <button class="diff-btn" data-diff="hard">Hard</button>
+    </div>
+    <button id="start-btn" disabled>Choose a category to start</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div id="screen-quiz" class="screen">
+    <div class="progress-row">
+      <span class="q-count" id="q-count">Question 1 / 8</span>
+      <span class="timer" id="timer"><i class="ti ti-clock" aria-hidden="true"></i> <span id="timer-val">20</span>s</span>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="prog-bar" style="width:0%"></div></div>
+    <div class="question-card">
+      <div class="q-category" id="q-cat"></div>
+      <p class="q-text" id="q-text"></p>
+    </div>
+    <div class="options-grid" id="options"></div>
+    <div class="explanation" id="explanation"></div>
+    <button id="next-btn">Next question <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+  </div>
+
+  <!-- Results Screen -->
+  <div id="screen-result" class="screen">
+    <h1>Quiz complete</h1>
+    <p class="sub" id="result-meta"></p>
+    <div class="result-card">
+      <div class="score-ring">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#E1F5EE" stroke-width="10"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#1D9E75" stroke-width="10"
+            stroke-linecap="round" id="score-arc"
+            stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+        </svg>
+        <div class="score-pct" id="score-pct">0%</div>
+      </div>
+      <div class="result-title" id="result-title"></div>
+      <div class="result-sub-msg" id="result-msg"></div>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-val" id="stat-correct">0</div><div class="stat-label">Correct</div></div>
+        <div class="stat"><div class="stat-val" id="stat-wrong">0</div><div class="stat-label">Wrong</div></div>
+        <div class="stat"><div class="stat-val" id="stat-time">0s</div><div class="stat-label">Avg time</div></div>
+      </div>
+    </div>
+    <div class="review-list" id="review-list"></div>
+    <button id="restart-btn">Try again <i class="ti ti-refresh" aria-hidden="true"></i></button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = {
+  science: {
+    icon: "ti-atom", label: "Science",
+    easy: [
+      { q: "What is the chemical symbol for water?", opts: ["H₂O","CO₂","NaCl","O₂"], ans: 0, exp: "Water is composed of two hydrogen atoms bonded to one oxygen atom, giving it the formula H₂O." },
+      { q: "How many planets are in our solar system?", opts: ["7","8","9","10"], ans: 1, exp: "There are 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune." },
+      { q: "What force keeps us on the ground?", opts: ["Magnetism","Nuclear force","Gravity","Friction"], ans: 2, exp: "Gravity is the attractive force between masses — Earth's gravity pulls us toward its center." },
+      { q: "What is the powerhouse of the cell?", opts: ["Nucleus","Mitochondria","Ribosome","Golgi body"], ans: 1, exp: "Mitochondria generate ATP through cellular respiration, supplying energy to the cell." },
+      { q: "What gas do plants absorb during photosynthesis?", opts: ["Oxygen","Nitrogen","Carbon dioxide","Hydrogen"], ans: 2, exp: "Plants absorb CO₂ and use sunlight to convert it into glucose and oxygen." },
+      { q: "What is the boiling point of water at sea level (°C)?", opts: ["90","95","100","110"], ans: 2, exp: "At standard atmospheric pressure (1 atm), water boils at exactly 100°C." },
+      { q: "Which planet is closest to the Sun?", opts: ["Venus","Earth","Mars","Mercury"], ans: 3, exp: "Mercury is the innermost planet, orbiting the Sun at an average distance of 57.9 million km." },
+      { q: "What is the most abundant gas in Earth's atmosphere?", opts: ["Oxygen","Carbon dioxide","Nitrogen","Argon"], ans: 2, exp: "Nitrogen makes up about 78% of Earth's atmosphere." },
+    ],
+    medium: [
+      { q: "What is Newton's second law of motion?", opts: ["F = ma","E = mc²","PV = nRT","V = IR"], ans: 0, exp: "Newton's second law states that force equals mass times acceleration (F = ma)." },
+      { q: "What is the speed of light in a vacuum?", opts: ["3×10⁸ m/s","3×10⁶ m/s","3×10¹⁰ m/s","1.5×10⁸ m/s"], ans: 0, exp: "Light travels at approximately 299,792,458 m/s (≈3×10⁸ m/s) in a vacuum." },
+      { q: "Which element has the atomic number 6?", opts: ["Nitrogen","Oxygen","Carbon","Helium"], ans: 2, exp: "Carbon (C) has 6 protons, giving it atomic number 6." },
+      { q: "What is the process by which cells divide?", opts: ["Osmosis","Mitosis","Diffusion","Meiosis"], ans: 1, exp: "Mitosis produces two genetically identical daughter cells." },
+      { q: "What particle has a negative charge?", opts: ["Proton","Neutron","Electron","Positron"], ans: 2, exp: "Electrons carry a negative charge and orbit the atomic nucleus." },
+      { q: "Which type of bond involves sharing electrons?", opts: ["Ionic","Covalent","Hydrogen","Metallic"], ans: 1, exp: "Covalent bonds form when atoms share pairs of electrons." },
+      { q: "What is the SI unit of electric current?", opts: ["Volt","Watt","Ampere","Ohm"], ans: 2, exp: "The ampere (A) measures the rate of flow of electric charge." },
+      { q: "What organ produces insulin?", opts: ["Liver","Kidney","Pancreas","Spleen"], ans: 2, exp: "The pancreas produces insulin, which regulates blood glucose levels." },
+    ],
+    hard: [
+      { q: "What is the Heisenberg Uncertainty Principle about?", opts: ["Speed of light limit","Position and momentum precision","Energy conservation","Quantum entanglement"], ans: 1, exp: "The more precisely position is determined, the less precisely momentum can be known, and vice versa." },
+      { q: "Which organelle contains its own DNA?", opts: ["Nucleus only","Mitochondria and chloroplasts","Ribosomes","Endoplasmic reticulum"], ans: 1, exp: "Mitochondria and chloroplasts contain circular DNA, supporting the endosymbiotic theory." },
+      { q: "What is the Pauli Exclusion Principle?", opts: ["No two electrons can have identical quantum numbers","Electrons always occupy lowest energy","Magnetic quantum number determines shape","Electrons spin in pairs"], ans: 0, exp: "No two fermions can occupy the same quantum state simultaneously." },
+      { q: "What causes the double-slit experiment result?", opts: ["Classical interference","Wave-particle duality","Quantum tunneling","Electromagnetic induction"], ans: 1, exp: "The double-slit experiment demonstrates wave-particle duality — particles exhibit interference when not observed." },
+      { q: "What is a quasar?", opts: ["A neutron star","An extremely luminous active galactic nucleus","A black hole remnant","A gamma-ray burst source"], ans: 1, exp: "Quasars are the extremely bright nuclei of distant galaxies, powered by supermassive black holes." },
+      { q: "In which process is ATP used, not produced?", opts: ["Oxidative phosphorylation","Glycolysis","Muscle contraction","Substrate-level phosphorylation"], ans: 2, exp: "Muscle contraction uses ATP via myosin ATPase to power the sliding of actin and myosin filaments." },
+      { q: "What is the primary cause of the greenhouse effect?", opts: ["Ozone layer depletion","Infrared absorption by atmospheric gases","Solar radiation increase","Magnetic field weakening"], ans: 1, exp: "Greenhouse gases absorb and re-emit infrared radiation, warming Earth's surface." },
+      { q: "What does CRISPR-Cas9 do?", opts: ["Sequences DNA","Edits specific DNA sequences","Amplifies DNA","Translates mRNA"], ans: 1, exp: "CRISPR-Cas9 targets and edits specific sequences in an organism's genome." },
+    ]
+  },
+  history: {
+    icon: "ti-book", label: "History",
+    easy: [
+      { q: "In which year did World War II end?", opts: ["1943","1944","1945","1946"], ans: 2, exp: "WWII ended in 1945 — in Europe on May 8 and in the Pacific on September 2." },
+      { q: "Who was the first US President?", opts: ["John Adams","Thomas Jefferson","Benjamin Franklin","George Washington"], ans: 3, exp: "George Washington served as the first President from 1789 to 1797." },
+      { q: "Which ancient wonder was located in Egypt?", opts: ["Hanging Gardens","Colossus of Rhodes","Great Pyramid of Giza","Temple of Artemis"], ans: 2, exp: "The Great Pyramid of Giza is the only surviving ancient wonder of the world." },
+      { q: "What city was the capital of the Roman Empire?", opts: ["Athens","Constantinople","Carthage","Rome"], ans: 3, exp: "Rome was the capital of the Roman Empire for centuries." },
+      { q: "Who painted the Mona Lisa?", opts: ["Michelangelo","Raphael","Leonardo da Vinci","Caravaggio"], ans: 2, exp: "Leonardo da Vinci painted the Mona Lisa, believed to have been created between 1503 and 1519." },
+      { q: "In which year did the Berlin Wall fall?", opts: ["1987","1988","1989","1990"], ans: 2, exp: "The Berlin Wall fell on November 9, 1989." },
+      { q: "Which empire was ruled by Julius Caesar?", opts: ["Greek","Byzantine","Ottoman","Roman"], ans: 3, exp: "Julius Caesar was a key figure in the transformation of the Roman Republic." },
+      { q: "Who discovered America in 1492?", opts: ["Amerigo Vespucci","Vasco da Gama","Christopher Columbus","Ferdinand Magellan"], ans: 2, exp: "Christopher Columbus reached the Americas in 1492." },
+    ],
+    medium: [
+      { q: "What was the name of the trade network connecting East and West?", opts: ["Amber Road","Silk Road","Spice Route","Trans-Saharan Trail"], ans: 1, exp: "The Silk Road connected China to the Mediterranean, active from around 130 BCE." },
+      { q: "Which revolution began in 1789?", opts: ["American","Industrial","Russian","French"], ans: 3, exp: "The French Revolution began in 1789 and transformed France's political and social structure." },
+      { q: "Who was the last pharaoh of ancient Egypt?", opts: ["Nefertiti","Cleopatra VII","Hatshepsut","Ramesses II"], ans: 1, exp: "Cleopatra VII was the last active ruler before Egypt became a Roman province in 30 BCE." },
+      { q: "What event triggered World War I?", opts: ["Sinking of the Lusitania","Assassination of Archduke Franz Ferdinand","German invasion of Poland","Russian Revolution"], ans: 1, exp: "The assassination of Archduke Franz Ferdinand in Sarajevo on June 28, 1914 triggered WWI." },
+      { q: "Which document declared American independence?", opts: ["The Constitution","The Bill of Rights","The Declaration of Independence","The Magna Carta"], ans: 2, exp: "The Declaration of Independence, adopted July 4, 1776, declared the 13 colonies independent." },
+      { q: "Who led the Cuban Revolution?", opts: ["Che Guevara","Batista","José Martí","Fidel Castro"], ans: 3, exp: "Fidel Castro led the Cuban Revolution, overthrowing Batista's government in 1959." },
+      { q: "What caused the Black Death?", opts: ["A virus","A prion disease","Yersinia pestis bacteria","Malaria parasite"], ans: 2, exp: "The Black Death was caused by Yersinia pestis bacteria, spread through fleas on rats." },
+      { q: "Which war was fought between the North and South of the USA?", opts: ["War of 1812","Revolutionary War","Civil War","Mexican-American War"], ans: 2, exp: "The American Civil War (1861–1865) was fought between the Union and the Confederacy." },
+    ],
+    hard: [
+      { q: "What was the Meiji Restoration?", opts: ["A Buddhist religious revival","Japan's modernization under imperial rule from 1868","A Chinese civil war","A Korean dynasty change"], ans: 1, exp: "The Meiji Restoration (1868) ended feudal rule in Japan and initiated rapid modernization." },
+      { q: "Which treaty ended the Thirty Years' War?", opts: ["Treaty of Utrecht","Peace of Westphalia","Treaty of Versailles","Congress of Vienna"], ans: 1, exp: "The Peace of Westphalia (1648) ended the Thirty Years' War and shaped modern international relations." },
+      { q: "What was the Scramble for Africa?", opts: ["An African trade network","19th-century European colonization of Africa","A pan-African independence movement","African migration patterns"], ans: 1, exp: "The Scramble for Africa (1880s–1914) was the rapid colonization of Africa by European powers." },
+      { q: "Who wrote the Communist Manifesto?", opts: ["Lenin and Stalin","Marx and Engels","Proudhon and Bakunin","Mao and Che"], ans: 1, exp: "Karl Marx and Friedrich Engels wrote The Communist Manifesto, published in 1848." },
+      { q: "What was the significance of the Battle of Thermopylae?", opts: ["Rome conquered Greece","Persian forces were permanently defeated","Spartan-led Greeks delayed Persian invasion","Athens destroyed the Persian fleet"], ans: 2, exp: "At Thermopylae (480 BCE), a small Greek force under Leonidas delayed a massive Persian army." },
+      { q: "Which empire is considered the world's largest contiguous land empire?", opts: ["Roman Empire","British Empire","Mongol Empire","Ottoman Empire"], ans: 2, exp: "The Mongol Empire (13th–14th centuries) covered about 24 million km²." },
+      { q: "What was the primary goal of the Marshall Plan?", opts: ["Military alliance formation","European economic recovery after WWII","Korean War funding","Colonial independence support"], ans: 1, exp: "The Marshall Plan (1948) provided ~$13 billion to rebuild Western European economies after WWII." },
+      { q: "Who was Toussaint Louverture?", opts: ["A French revolutionary leader","A leader of the Haitian Revolution","A Cuban independence fighter","A Brazilian liberator"], ans: 1, exp: "Toussaint Louverture led the Haitian Revolution, resulting in the first Black republic in 1804." },
+    ]
+  },
+  tech: {
+    icon: "ti-cpu", label: "Technology",
+    easy: [
+      { q: "What does 'HTML' stand for?", opts: ["HyperText Markup Language","High Transfer Machine Language","HyperText Machine Learning","Hyper Transfer Markup Link"], ans: 0, exp: "HTML (HyperText Markup Language) is the standard language for creating web pages." },
+      { q: "What does 'CPU' stand for?", opts: ["Central Processing Unit","Computer Power Unit","Core Processing Utility","Central Program Unit"], ans: 0, exp: "CPU stands for Central Processing Unit — the primary component executing instructions." },
+      { q: "Who co-founded Apple Inc.?", opts: ["Bill Gates","Elon Musk","Steve Jobs","Larry Page"], ans: 2, exp: "Steve Jobs co-founded Apple in 1976 along with Steve Wozniak and Ronald Wayne." },
+      { q: "What does 'URL' stand for?", opts: ["Universal Resource Locator","Unique Reference Link","Uniform Resource Locator","Universal Remote Link"], ans: 2, exp: "URL (Uniform Resource Locator) is the address used to access resources on the internet." },
+      { q: "What programming language is often used for data science?", opts: ["HTML","CSS","Python","Fortran"], ans: 2, exp: "Python is widely used in data science for its readability and rich library ecosystem." },
+      { q: "What does 'Wi-Fi' operate on?", opts: ["Infrared signals","Radio waves","Bluetooth","Satellite signals"], ans: 1, exp: "Wi-Fi uses radio waves (typically 2.4 GHz or 5 GHz bands) to transmit data wirelessly." },
+      { q: "What is the function of RAM?", opts: ["Long-term storage","Graphics rendering","Temporary data storage","Network connectivity"], ans: 2, exp: "RAM temporarily stores data the CPU is currently using, enabling fast access." },
+      { q: "What company developed Android?", opts: ["Apple","Microsoft","Samsung","Google"], ans: 3, exp: "Android was developed by Android Inc., acquired by Google in 2005." },
+    ],
+    medium: [
+      { q: "What is the purpose of a VPN?", opts: ["Increase internet speed","Create encrypted private network connections","Block advertisements","Expand Wi-Fi range"], ans: 1, exp: "A VPN encrypts internet traffic and routes it through a remote server." },
+      { q: "What does 'API' stand for?", opts: ["Automated Program Interface","Application Programming Interface","Applied Protocol Integration","Advanced Processor Interface"], ans: 1, exp: "API (Application Programming Interface) defines how software components interact." },
+      { q: "What is the difference between HTTP and HTTPS?", opts: ["Speed","Encryption","File size limits","Browser compatibility"], ans: 1, exp: "HTTPS adds SSL/TLS encryption to HTTP, securing data in transit." },
+      { q: "What is machine learning?", opts: ["Programming robots manually","Systems learning from data without explicit programming","A CPU architecture type","A database technique"], ans: 1, exp: "Machine learning is a subset of AI where systems improve by learning from data." },
+      { q: "What is a blockchain?", opts: ["A type of firewall","A distributed immutable ledger","A social network protocol","A file compression standard"], ans: 1, exp: "A blockchain stores data in cryptographically linked blocks, making it tamper-resistant." },
+      { q: "What does 'SQL' stand for?", opts: ["Structured Query Language","System Quality Language","Standard Queue Logic","Sequential Query Link"], ans: 0, exp: "SQL (Structured Query Language) is used to manage and query relational databases." },
+      { q: "What is an IP address?", opts: ["An internet protocol type","A unique numerical label for network devices","A wireless frequency","A processor type"], ans: 1, exp: "An IP address is a unique number assigned to each device on a network." },
+      { q: "What is the purpose of Git?", opts: ["Database management","Version control for code","Network security","Server hosting"], ans: 1, exp: "Git is a distributed version control system that tracks changes in source code." },
+    ],
+    hard: [
+      { q: "What is the CAP theorem?", opts: ["Consistency, Availability, Partition tolerance — only 2 guaranteed","Cache, Access, Performance trade-off","Concurrency, Atomicity, Persistence model","Cluster, Allocation, Processing constraints"], ans: 0, exp: "CAP theorem: a distributed system can only guarantee two of Consistency, Availability, Partition tolerance." },
+      { q: "Time complexity of binary search?", opts: ["O(n)","O(n²)","O(log n)","O(n log n)"], ans: 2, exp: "Binary search halves the search space each step, giving O(log n) time complexity." },
+      { q: "What is a race condition?", opts: ["An optimization technique","Behavior depending on unpredictable timing of concurrent operations","A type of memory leak","A CPU scheduling algorithm"], ans: 1, exp: "A race condition occurs when behavior depends on the relative timing of concurrent operations." },
+      { q: "What does ACID stand for in databases?", opts: ["Atomicity, Consistency, Isolation, Durability","Availability, Concurrency, Integrity, Distribution","Access, Control, Index, Data","Allocation, Compression, Integration, Deletion"], ans: 0, exp: "ACID properties guarantee reliable database transactions." },
+      { q: "TCP vs UDP — what's the key difference?", opts: ["TCP is faster, UDP is reliable","TCP is connection-oriented and reliable; UDP is connectionless and faster","They are identical","UDP only works locally"], ans: 1, exp: "TCP ensures reliable ordered delivery; UDP is connectionless and faster but without guaranteed delivery." },
+      { q: "What is a Turing-complete system?", opts: ["A system that can break encryption","A system that can simulate any Turing machine","A quantum computing system","A system with no computation limits"], ans: 1, exp: "A Turing-complete system can compute any computable function given enough resources." },
+      { q: "What is memory-mapped I/O?", opts: ["Using RAM as virtual storage","Mapping device registers into the CPU's address space","Caching I/O operations","Compressing data before storage"], ans: 1, exp: "Memory-mapped I/O places device registers in the same address space as RAM." },
+      { q: "What does 'idempotent' mean in REST APIs?", opts: ["Same request always returns same response time","Multiple identical requests produce same result as a single request","The API requires authentication","Requests are processed in order"], ans: 1, exp: "An idempotent operation produces the same result no matter how many times it's performed." },
+    ]
+  },
+  geography: {
+    icon: "ti-map", label: "Geography",
+    easy: [
+      { q: "What is the largest ocean on Earth?", opts: ["Atlantic","Indian","Arctic","Pacific"], ans: 3, exp: "The Pacific Ocean covers about 165 million km², more than all landmasses combined." },
+      { q: "What is the capital of France?", opts: ["Lyon","Marseille","Paris","Bordeaux"], ans: 2, exp: "Paris has been the capital of France since the late 10th century." },
+      { q: "Which is the longest river in the world?", opts: ["Amazon","Mississippi","Yangtze","Nile"], ans: 3, exp: "The Nile stretches approximately 6,650 km through northeastern Africa." },
+      { q: "On which continent is the Sahara Desert?", opts: ["Asia","Australia","South America","Africa"], ans: 3, exp: "The Sahara spans much of North Africa and is the world's largest hot desert." },
+      { q: "What is the smallest country in the world?", opts: ["Monaco","San Marino","Liechtenstein","Vatican City"], ans: 3, exp: "Vatican City covers just 0.44 km² within Rome, Italy." },
+      { q: "Which country has the most natural lakes?", opts: ["Russia","USA","Brazil","Canada"], ans: 3, exp: "Canada has about 879,800 lakes and contains roughly 60% of the world's freshwater lakes." },
+      { q: "What is the tallest mountain in the world?", opts: ["K2","Mount Kilimanjaro","Mount Everest","Mont Blanc"], ans: 2, exp: "Mount Everest stands at 8,848.86 m above sea level." },
+      { q: "What is the capital of Japan?", opts: ["Osaka","Kyoto","Hiroshima","Tokyo"], ans: 3, exp: "Tokyo is Japan's capital and the world's most populous metropolitan area." },
+    ],
+    medium: [
+      { q: "Which country has the most time zones?", opts: ["USA","Russia","China","France"], ans: 3, exp: "France, including its overseas territories, spans 12 time zones." },
+      { q: "What is the deepest lake in the world?", opts: ["Lake Tanganyika","Caspian Sea","Lake Superior","Lake Baikal"], ans: 3, exp: "Lake Baikal in Siberia is 1,642 m deep and holds about 20% of the world's surface freshwater." },
+      { q: "Which two continents does the Panama Canal connect?", opts: ["North America & South America","North America & Europe","South America & Africa","Europe & Asia"], ans: 0, exp: "The Panama Canal connects the Atlantic and Pacific Oceans between North and South America." },
+      { q: "What is the longest mountain range in the world?", opts: ["Himalayas","Rocky Mountains","Andes","Alps"], ans: 2, exp: "The Andes stretch approximately 7,000 km along the western coast of South America." },
+      { q: "Which country is both in Europe and Asia?", opts: ["Georgia","Turkey","Azerbaijan","Russia"], ans: 3, exp: "Russia spans 11 time zones across both Europe and Asia." },
+      { q: "What percentage of Earth's surface is covered by oceans?", opts: ["51%","61%","71%","81%"], ans: 2, exp: "Oceans cover about 71% of Earth's surface." },
+      { q: "Which African country has the largest population?", opts: ["Ethiopia","South Africa","Egypt","Nigeria"], ans: 3, exp: "Nigeria has the largest population in Africa, with over 220 million people." },
+      { q: "What is the driest place on Earth?", opts: ["Sahara Desert","Arabian Desert","Atacama Desert","Gobi Desert"], ans: 2, exp: "The Atacama Desert receives less than 1 mm of rain per year in some areas." },
+    ],
+    hard: [
+      { q: "What is the Coriolis effect?", opts: ["Ocean current from temperature","Deflection of moving objects due to Earth's rotation","Tidal patterns from lunar gravity","Wind from pressure differences"], ans: 1, exp: "Earth's rotation deflects moving air and water — rightward in the Northern Hemisphere, leftward in the Southern." },
+      { q: "Which country has the most biodiversity?", opts: ["Brazil","Indonesia","Australia","Colombia"], ans: 0, exp: "Brazil is home to about 10% of all species on Earth due largely to the Amazon rainforest." },
+      { q: "What is the Fertile Crescent?", opts: ["A trade route across the Sahara","A Middle Eastern region where agriculture first emerged","A river delta in Southeast Asia","A historical name for the Nile Valley only"], ans: 1, exp: "The Fertile Crescent is often called the 'cradle of civilization' for its early agriculture." },
+      { q: "What creates mid-ocean ridges?", opts: ["Subduction of oceanic plates","Upwelling magma from seafloor spreading","Ocean current erosion","Collision of two continental plates"], ans: 1, exp: "Mid-ocean ridges form where plates diverge and magma wells up, creating new oceanic crust." },
+      { q: "Which country has the most coastline?", opts: ["Russia","Australia","Norway","Canada"], ans: 3, exp: "Canada has about 202,080 km of coastline — the longest of any country." },
+      { q: "What is the average depth of the world's oceans?", opts: ["1.5 km","2.5 km","3.7 km","5.1 km"], ans: 2, exp: "The average depth of the world's oceans is approximately 3,688 m." },
+      { q: "What causes a rain shadow?", opts: ["Ocean currents deflecting moisture","Mountains blocking prevailing winds","High-pressure systems over deserts","Distance from the equator"], ans: 1, exp: "Mountains force air upward; moisture falls on the windward side, leaving the leeward side dry." },
+      { q: "Which is the only sea with no land boundaries?", opts: ["Sargasso Sea","Arabian Sea","Coral Sea","Weddell Sea"], ans: 0, exp: "The Sargasso Sea is defined by four ocean currents, not land boundaries." },
+    ]
+  }
+};
+
+const CATS = Object.keys(QUESTIONS);
+let selectedCat = null, selectedDiff = "easy";
+let quizQ = [], curr = 0, score = 0, answers = [], timers = [], timerInterval, timeLeft, startTime;
+
+const $ = id => document.getElementById(id);
+const showScreen = id => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); };
+
+function buildCatGrid() {
+  const grid = $('cat-grid');
+  CATS.forEach(c => {
+    const d = QUESTIONS[c];
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+    card.innerHTML = `<i class="ti ${d.icon}" aria-hidden="true"></i><span>${d.label}</span>`;
+    card.onclick = () => {
+      document.querySelectorAll('.cat-card').forEach(x => x.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedCat = c;
+      $('start-btn').disabled = false;
+      $('start-btn').textContent = `Start ${d.label} Quiz`;
+    };
+    grid.appendChild(card);
+  });
+}
+
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedDiff = btn.dataset.diff;
+  };
+});
+
+$('start-btn').onclick = startQuiz;
+$('next-btn').onclick = nextQuestion;
+$('restart-btn').onclick = () => {
+  selectedCat = null; selectedDiff = "easy";
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector('.diff-btn[data-diff=easy]').classList.add('selected');
+  $('start-btn').disabled = true; $('start-btn').textContent = 'Choose a category to start';
+  showScreen('screen-home');
+};
+
+function startQuiz() {
+  const pool = [...QUESTIONS[selectedCat][selectedDiff]];
+  quizQ = pool.sort(() => Math.random() - 0.5).slice(0, 8);
+  curr = 0; score = 0; answers = []; timers = [];
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function getTimeLimit() { return { easy: 20, medium: 15, hard: 10 }[selectedDiff]; }
+
+function renderQuestion() {
+  const q = quizQ[curr];
+  $('q-count').textContent = `Question ${curr + 1} / ${quizQ.length}`;
+  $('prog-bar').style.width = `${(curr / quizQ.length) * 100}%`;
+  $('q-cat').textContent = QUESTIONS[selectedCat].label;
+  $('q-text').textContent = q.q;
+  $('explanation').classList.remove('show');
+  $('next-btn').classList.remove('show');
+  const opts = $('options');
+  opts.innerHTML = '';
+  ['A','B','C','D'].forEach((lbl, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-label">${lbl}</span>${q.opts[i]}`;
+    btn.onclick = () => selectAnswer(i);
+    opts.appendChild(btn);
+  });
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = getTimeLimit(); startTime = Date.now();
+  $('timer-val').textContent = timeLeft;
+  $('timer').classList.remove('warn');
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    $('timer-val').textContent = timeLeft;
+    if (timeLeft <= 5) $('timer').classList.add('warn');
+    if (timeLeft <= 0) { clearInterval(timerInterval); autoFail(); }
+  }, 1000);
+}
+
+function autoFail() {
+  timers.push(getTimeLimit());
+  answers.push({ q: quizQ[curr], chosen: -1, correct: false });
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  document.querySelectorAll('.opt-btn')[quizQ[curr].ans].classList.add('correct');
+  showExplanation();
+}
+
+function selectAnswer(i) {
+  clearInterval(timerInterval);
+  timers.push(Math.round((Date.now() - startTime) / 1000));
+  const q = quizQ[curr];
+  const correct = i === q.ans;
+  if (correct) score++;
+  answers.push({ q, chosen: i, correct });
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b => b.disabled = true);
+  btns[q.ans].classList.add('correct');
+  if (!correct && i >= 0) btns[i].classList.add('wrong');
+  showExplanation();
+}
+
+function showExplanation() {
+  $('explanation').textContent = quizQ[curr].exp;
+  $('explanation').classList.add('show');
+  $('next-btn').textContent = curr < quizQ.length - 1 ? 'Next question →' : 'See results →';
+  $('next-btn').classList.add('show');
+}
+
+function nextQuestion() {
+  curr++;
+  if (curr >= quizQ.length) { showResults(); return; }
+  renderQuestion();
+}
+
+function showResults() {
+  showScreen('screen-result');
+  const total = quizQ.length;
+  const pct = Math.round((score / total) * 100);
+  const avgTime = Math.round(timers.reduce((a,b)=>a+b,0)/timers.length);
+  $('score-pct').textContent = pct + '%';
+  $('score-arc').style.strokeDashoffset = 251.2 - (251.2 * pct / 100);
+  const tiers = [[0,49,"Needs work","Keep studying — you'll get there."],[50,69,"Getting there","Solid attempt! Review the tricky ones."],[70,89,"Good job","Strong performance — well done."],[90,100,"Excellent!","Outstanding — you really know your stuff!"]];
+  const [,,title,msg] = tiers.find(([lo,hi]) => pct >= lo && pct <= hi);
+  $('result-title').textContent = title;
+  $('result-msg').textContent = msg;
+  $('result-meta').textContent = `${QUESTIONS[selectedCat].label} · ${selectedDiff} · ${total} questions`;
+  $('stat-correct').textContent = score;
+  $('stat-wrong').textContent = total - score;
+  $('stat-time').textContent = avgTime + 's';
+  const rl = $('review-list');
+  rl.innerHTML = '';
+  answers.forEach(({q, chosen, correct}) => {
+    const item = document.createElement('div');
+    item.className = `review-item ${correct ? 'correct' : 'wrong'}`;
+    const icon = correct ? 'ti-circle-check' : 'ti-circle-x';
+    const chosenText = chosen >= 0 ? `Your answer: ${q.opts[chosen]} · ` : 'Timed out · ';
+    item.innerHTML = `<i class="ti ${icon} review-icon ${correct?'correct':'wrong'}" aria-hidden="true"></i><div><div class="review-q">${q.q}</div><div class="review-ans">${!correct ? chosenText : ''}Correct: <span>${q.opts[q.ans]}</span></div></div>`;
+    rl.appendChild(item);
+  });
+}
+
+buildCatGrid();
+</script>
+</body>
+</html>
