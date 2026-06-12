@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Netflix</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E50914;
+  --red-hover:#f6121d;
+  --black:#000;
+  --dark:#141414;
+  --card-bg:#1a1a1a;
+  --text:#fff;
+  --text-muted:#aaa;
+  --nav-h:68px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:'Netflix Sans','Helvetica Neue',Arial,sans-serif;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 4%;transition:background .4s}
+nav.scrolled{background:var(--black)}
+nav::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.9) 0%,transparent 100%);z-index:-1}
+.nav-left{display:flex;align-items:center;gap:28px}
+.logo{color:var(--red);font-size:1.9rem;font-weight:900;letter-spacing:-1px;text-decoration:none;line-height:1}
+.logo span{display:inline-block}
+.nav-links{display:flex;gap:18px;list-style:none}
+.nav-links a{color:rgba(255,255,255,.78);font-size:.82rem;text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-right{display:flex;align-items:center;gap:20px}
+.nav-search{background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;opacity:.85;transition:opacity .2s}
+.nav-search:hover{opacity:1}
+.nav-bell{background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;opacity:.85}
+.nav-avatar{width:32px;height:32px;border-radius:4px;background:linear-gradient(135deg,#5364ef,#e73656);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;cursor:pointer}
+
+/* ── HERO ── */
+.hero{position:relative;height:100vh;min-height:500px;display:flex;align-items:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:
+  linear-gradient(to right, rgba(0,0,0,.85) 35%, transparent 70%),
+  linear-gradient(to top, rgba(20,20,20,1) 0%, transparent 20%),
+  linear-gradient(to bottom, rgba(0,0,0,.4) 0%, transparent 25%);z-index:1}
+.hero-poster{position:absolute;inset:0;object-fit:cover;width:100%;height:100%;filter:brightness(.75)}
+.hero-content{position:relative;z-index:2;padding:0 4%;max-width:600px;margin-top:var(--nav-h)}
+.hero-logo-img{font-size:3.5rem;font-weight:900;line-height:1;letter-spacing:-2px;margin-bottom:1.2rem;text-shadow:2px 4px 12px rgba(0,0,0,.6)}
+.hero-logo-img em{color:var(--red);font-style:normal}
+.hero-meta{display:flex;align-items:center;gap:10px;margin-bottom:.9rem;font-size:.82rem}
+.hero-match{color:#46d369;font-weight:700}
+.hero-rating{border:1px solid rgba(255,255,255,.5);padding:1px 6px;font-size:.75rem}
+.hero-desc{font-size:.97rem;line-height:1.55;color:rgba(255,255,255,.92);max-width:480px;margin-bottom:1.4rem;text-shadow:1px 2px 4px rgba(0,0,0,.6)}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-play{display:flex;align-items:center;gap:8px;background:#fff;color:#000;border:none;padding:10px 26px;border-radius:4px;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-play:hover{background:rgba(255,255,255,.82)}
+.btn-play svg{width:22px;height:22px;fill:#000}
+.btn-info{display:flex;align-items:center;gap:8px;background:rgba(109,109,110,.7);color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:1rem;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-info:hover{background:rgba(109,109,110,.5)}
+.btn-info svg{width:20px;height:20px;fill:#fff}
+.maturity-badge{position:absolute;right:0;bottom:28%;z-index:2;background:rgba(51,51,51,.6);border-left:3px solid rgba(255,255,255,.65);padding:5px 14px 5px 10px;font-size:.85rem}
+
+/* ── ROWS ── */
+.rows-section{position:relative;z-index:2;margin-top:-80px;padding-bottom:60px}
+.row{margin-bottom:2.5vw;padding:0 4%}
+.row-title{font-size:1.1rem;font-weight:700;margin-bottom:.65rem;color:#e5e5e5}
+.row-title.green{color:#46d369}
+.slider-wrap{position:relative}
+.slider{display:flex;gap:5px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:4px}
+.slider::-webkit-scrollbar{display:none}
+.card{flex:0 0 calc(20% - 4px);min-width:160px;border-radius:4px;overflow:hidden;cursor:pointer;position:relative;transition:transform .3s,z-index 0s .3s}
+.card:hover{transform:scale(1.08);z-index:10;transition:transform .3s,z-index 0s}
+.card-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--card-bg)}
+.card-poster{width:100%;aspect-ratio:16/9;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;font-size:.72rem;font-weight:700;text-align:center;letter-spacing:.04em;text-shadow:0 1px 4px #000}
+.card-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background .25s;display:flex;flex-direction:column;justify-content:flex-end;padding:10px 8px 8px}
+.card:hover .card-overlay{background:rgba(0,0,0,.18)}
+.card-actions{opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;display:flex;gap:6px;align-items:center}
+.card:hover .card-actions{opacity:1;transform:translateY(0)}
+.ca-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,255,255,.7);background:rgba(20,20,20,.8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:border-color .2s,background .2s}
+.ca-btn:hover{border-color:#fff;background:rgba(50,50,50,.9)}
+.ca-btn.play-sm{background:#fff;border-color:#fff;color:#000}
+.card-info{opacity:0;transform:translateY(4px);transition:opacity .2s .05s,transform .2s .05s;margin-top:6px}
+.card:hover .card-info{opacity:1;transform:translateY(0)}
+.card-match{color:#46d369;font-size:.72rem;font-weight:700}
+.card-tags{font-size:.65rem;color:var(--text-muted);margin-top:2px}
+
+/* Arrow buttons */
+.arrow{position:absolute;top:0;bottom:0;width:50px;background:rgba(20,20,20,.6);border:none;color:#fff;font-size:1.4rem;cursor:pointer;z-index:5;opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center}
+.slider-wrap:hover .arrow{opacity:1}
+.arrow-left{left:0;border-radius:4px 0 0 4px}
+.arrow-right{right:0;border-radius:0 4px 4px 0}
+
+/* Top 10 */
+.card.top10{flex:0 0 calc(22% - 4px);min-width:180px}
+.top10-num{position:absolute;bottom:-8px;left:-14px;font-size:5.5rem;font-weight:900;line-height:1;color:#141414;-webkit-text-stroke:3px rgba(255,255,255,.35);z-index:2;pointer-events:none;user-select:none}
+
+/* ── GENRE STRIP ── */
+.genre-strip{display:flex;gap:8px;overflow-x:auto;padding:0 4% 1.5rem;scrollbar-width:none}
+.genre-strip::-webkit-scrollbar{display:none}
+.genre-pill{flex:0 0 auto;border:1px solid rgba(255,255,255,.25);border-radius:3px;padding:6px 16px;font-size:.82rem;color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s}
+.genre-pill:hover,.genre-pill.active{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.55);color:#fff}
+
+/* ── FEATURE STRIPS (FAQ, etc.) ── */
+.more-section{padding:60px 4%;border-top:8px solid #222;background:var(--black)}
+.more-section h2{font-size:2.4rem;font-weight:900;text-align:center;margin-bottom:48px}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px}
+.feature{background:#222;padding:28px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.feature-text h3{font-size:1.35rem;font-weight:700;margin-bottom:8px}
+.feature-text p{font-size:.92rem;color:#aaa;line-height:1.5}
+.feature-icon{font-size:3.2rem;flex-shrink:0}
+
+/* ── FAQ ── */
+.faq-section{padding:60px 4%;background:var(--black);border-top:8px solid #222}
+.faq-section h2{font-size:2.4rem;font-weight:900;text-align:center;margin-bottom:32px}
+.faq-item{margin-bottom:2px}
+.faq-q{width:100%;background:#2d2d2d;border:none;color:#fff;padding:18px 20px;font-size:1rem;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .2s}
+.faq-q:hover{background:#3d3d3d}
+.faq-icon{font-size:1.5rem;line-height:1;transition:transform .25s;flex-shrink:0}
+.faq-a{background:#2d2d2d;overflow:hidden;max-height:0;transition:max-height .3s ease}
+.faq-a.open{max-height:200px}
+.faq-a p{padding:16px 20px;font-size:.95rem;line-height:1.6;color:#aaa;border-top:2px solid #444}
+
+/* ── CTA STRIP ── */
+.cta-strip{padding:60px 4%;background:var(--black);border-top:8px solid #222;text-align:center}
+.cta-strip h2{font-size:2rem;font-weight:900;margin-bottom:8px}
+.cta-strip p{color:#aaa;margin-bottom:20px}
+.email-row{display:flex;gap:8px;max-width:480px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.email-row input{flex:1;min-width:200px;padding:14px 16px;background:#333;border:1px solid #555;color:#fff;font-size:.95rem;border-radius:3px;outline:none}
+.email-row input::placeholder{color:#888}
+.email-row input:focus{border-color:#aaa}
+.email-row button{background:var(--red);color:#fff;border:none;padding:14px 24px;font-size:1rem;font-weight:700;border-radius:3px;cursor:pointer;white-space:nowrap;transition:background .2s}
+.email-row button:hover{background:var(--red-hover)}
+
+/* ── FOOTER ── */
+footer{background:var(--black);padding:48px 4% 32px;color:#757575}
+footer a{color:#757575;text-decoration:none;font-size:.82rem}
+footer a:hover{text-decoration:underline}
+.footer-links{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px 8px;margin-bottom:28px}
+.footer-lang{border:1px solid #555;background:transparent;color:#aaa;padding:7px 36px 7px 12px;font-size:.82rem;border-radius:3px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaa' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;margin-bottom:16px}
+.footer-copy{font-size:.78rem;margin-top:12px}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#181818;border-radius:6px;max-width:860px;width:92%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(30,30,30,.9);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.1rem;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+.modal-hero{position:relative;aspect-ratio:16/9;background:#0a0a0a;display:flex;align-items:flex-end;padding:24px}
+.modal-hero-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:.15;pointer-events:none}
+.modal-hero-gradient{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,#181818,transparent)}
+.modal-hero-content{position:relative;z-index:1}
+.modal-hero-title{font-size:1.8rem;font-weight:900;margin-bottom:12px}
+.modal-hero-btns{display:flex;gap:10px}
+.modal-body{padding:24px}
+.modal-meta{display:flex;gap:10px;align-items:center;margin-bottom:12px;font-size:.85rem}
+.modal-match{color:#46d369;font-weight:700}
+.modal-desc{font-size:.9rem;line-height:1.6;color:#d2d2d2;margin-bottom:20px}
+.modal-tags{font-size:.82rem;color:#777}
+.modal-tags span{color:#d2d2d2}
+
+/* ── RESPONSIVE ── */
+@media(max-width:800px){
+  .nav-links{display:none}
+  .hero-logo-img{font-size:2.4rem}
+  .card{flex:0 0 calc(33% - 4px)}
+  .card.top10{flex:0 0 calc(40% - 4px)}
+  .more-section h2,.faq-section h2{font-size:1.7rem}
+  .feature{flex-direction:column;text-align:center}
+}
+@media(max-width:520px){
+  .card{flex:0 0 calc(45% - 4px)}
+  .hero-desc{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-left">
+    <a class="logo" href="#"><span>NETFLIX</span></a>
+    <ul class="nav-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="#">TV Shows</a></li>
+      <li><a href="#">Movies</a></li>
+      <li><a href="#">New &amp; Popular</a></li>
+      <li><a href="#">My List</a></li>
+      <li><a href="#">Browse by Languages</a></li>
+    </ul>
+  </div>
+  <div class="nav-right">
+    <button class="nav-search" title="Search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="nav-bell" title="Notifications">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+    <div class="nav-avatar">U</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <!-- Cinematic gradient poster using CSS art -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%, #1a0a2e 0%, #0d0d1a 40%, #000 100%);z-index:0"></div>
+  <div style="position:absolute;right:5%;top:50%;transform:translateY(-50%);z-index:1;opacity:.55;font-size:clamp(10rem,28vw,24rem);line-height:1;font-weight:900;color:#1a0a2e;text-shadow:0 0 80px rgba(130,50,255,.3);pointer-events:none;user-select:none;letter-spacing:-4px">◈</div>
+  <div style="position:absolute;right:8%;top:20%;z-index:1;opacity:.28;font-size:2rem;color:#7b2ff7;pointer-events:none">✦</div>
+  <div style="position:absolute;right:20%;bottom:30%;z-index:1;opacity:.18;font-size:3.5rem;color:#e50914;pointer-events:none">◉</div>
+
+  <div class="hero-content">
+    <div class="hero-logo-img">STRANGER<br><em>THINGS</em></div>
+    <div class="hero-meta">
+      <span class="hero-match">98% Match</span>
+      <span>2024</span>
+      <span class="hero-rating">TV-14</span>
+      <span>4 Seasons</span>
+    </div>
+    <p class="hero-desc">When a boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one very strange little girl — and nothing will ever be the same again.</p>
+    <div class="hero-btns">
+      <button class="btn-play" onclick="openModal('stranger')">
+        <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        Play
+      </button>
+      <button class="btn-info" onclick="openModal('stranger')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        More Info
+      </button>
+    </div>
+  </div>
+  <div class="maturity-badge">TV-14</div>
+</section>
+
+<!-- MAIN CONTENT -->
+<main class="rows-section">
+
+  <!-- Genre Pills -->
+  <div class="genre-strip">
+    <div class="genre-pill active">All</div>
+    <div class="genre-pill">Action</div>
+    <div class="genre-pill">Drama</div>
+    <div class="genre-pill">Comedy</div>
+    <div class="genre-pill">Thriller</div>
+    <div class="genre-pill">Sci-Fi</div>
+    <div class="genre-pill">Horror</div>
+    <div class="genre-pill">Romance</div>
+    <div class="genre-pill">Documentary</div>
+    <div class="genre-pill">Animation</div>
+    <div class="genre-pill">Crime</div>
+  </div>
+
+  <!-- Row: Continue Watching -->
+  <div class="row">
+    <div class="row-title">Continue Watching for User</div>
+    <div class="slider-wrap">
+      <button class="arrow arrow-left" onclick="scroll(this,-1)">&#8249;</button>
+      <div class="slider" id="row-continue">
+      </div>
+      <button class="arrow arrow-right" onclick="scroll(this,1)">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- Row: Top 10 -->
+  <div class="row">
+    <div class="row-title green">Top 10 in India Today</div>
+    <div class="slider-wrap">
+      <button class="arrow arrow-left" onclick="scroll(this,-1)">&#8249;</button>
+      <div class="slider" id="row-top10"></div>
+      <button class="arrow arrow-right" onclick="scroll(this,1)">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- Row: Trending -->
+  <div class="row">
+    <div class="row-title">Trending Now</div>
+    <div class="slider-wrap">
+      <button class="arrow arrow-left" onclick="scroll(this,-1)">&#8249;</button>
+      <div class="slider" id="row-trending"></div>
+      <button class="arrow arrow-right" onclick="scroll(this,1)">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- Row: Netflix Originals -->
+  <div class="row">
+    <div class="row-title" style="color:#e50914">Netflix Originals</div>
+    <div class="slider-wrap">
+      <button class="arrow arrow-left" onclick="scroll(this,-1)">&#8249;</button>
+      <div class="slider" id="row-originals"></div>
+      <button class="arrow arrow-right" onclick="scroll(this,1)">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- Row: Popular on Netflix -->
+  <div class="row">
+    <div class="row-title">Popular on Netflix</div>
+    <div class="slider-wrap">
+      <button class="arrow arrow-left" onclick="scroll(this,-1)">&#8249;</button>
+      <div class="slider" id="row-popular"></div>
+      <button class="arrow arrow-right" onclick="scroll(this,1)">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- Row: Because You Watched -->
+  <div class="row">
+    <div class="row-title">Because You Watched <em style="font-style:normal;color:#aaa">Stranger Things</em></div>
+    <div class="slider-wrap">
+      <button class="arrow arrow-left" onclick="scroll(this,-1)">&#8249;</button>
+      <div class="slider" id="row-because"></div>
+      <button class="arrow arrow-right" onclick="scroll(this,1)">&#8250;</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- MORE REASONS -->
+<div class="more-section">
+  <h2>More reasons to join</h2>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-text">
+        <h3>Enjoy on your TV</h3>
+        <p>Watch on Smart TVs, PlayStation, Xbox, Chromecast, Apple TV, Blu-ray players and more.</p>
+      </div>
+      <div class="feature-icon">📺</div>
+    </div>
+    <div class="feature">
+      <div class="feature-text">
+        <h3>Download your shows</h3>
+        <p>Save your favourites easily and always have something to watch.</p>
+      </div>
+      <div class="feature-icon">📲</div>
+    </div>
+    <div class="feature">
+      <div class="feature-text">
+        <h3>Watch everywhere</h3>
+        <p>Stream unlimited movies and TV shows on your phone, tablet, laptop and TV.</p>
+      </div>
+      <div class="feature-icon">🖥️</div>
+    </div>
+    <div class="feature">
+      <div class="feature-text">
+        <h3>Create profiles for kids</h3>
+        <p>Send kids on adventures with their favourite characters in a space made just for them — free with your membership.</p>
+      </div>
+      <div class="feature-icon">👧</div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <h2>Frequently Asked Questions</h2>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      What is Netflix? <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">
+      <p>Netflix is a streaming service that offers a wide variety of award-winning TV shows, movies, anime, documentaries, and more on thousands of internet-connected devices. You can watch as much as you want, whenever you want – without a single commercial.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      How much does Netflix cost? <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">
+      <p>Watch Netflix on your smartphone, tablet, Smart TV, laptop or streaming device, all for one fixed monthly fee. Plans range from ₹149 to ₹649 a month. No extra costs, no contracts.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      Where can I watch? <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">
+      <p>Watch anywhere, anytime. Sign in with your Netflix account to watch instantly on the web at netflix.com from your personal computer or on any internet-connected device that offers the Netflix app, including smart TVs, smartphones, tablets, streaming media players and game consoles.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      How do I cancel? <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">
+      <p>Netflix is flexible. There are no pesky contracts and no commitments. You can easily cancel your account online in two clicks. There are no cancellation fees – start or stop your account at any time.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      What can I watch on Netflix? <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">
+      <p>Netflix has an extensive library of feature films, documentaries, TV shows, anime, award-winning Netflix originals, and more. Watch as much as you want, whenever you want.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-strip">
+  <h2>Ready to watch? Enter your email to create or restart your membership.</h2>
+  <p>Questions? Call 000-800-919-1694</p>
+  <div class="email-row">
+    <input type="email" placeholder="Email address"/>
+    <button>Get Started &rsaquo;</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p style="margin-bottom:24px;font-size:.9rem">Questions? Call 000-800-919-1694</p>
+  <div class="footer-links">
+    <a href="#">FAQ</a><a href="#">Help Centre</a><a href="#">Account</a><a href="#">Media Centre</a>
+    <a href="#">Investor Relations</a><a href="#">Jobs</a><a href="#">Ways to Watch</a><a href="#">Terms of Use</a>
+    <a href="#">Privacy</a><a href="#">Cookie Preferences</a><a href="#">Corporate Information</a><a href="#">Contact Us</a>
+    <a href="#">Speed Test</a><a href="#">Legal Notices</a><a href="#">Only on Netflix</a>
+  </div>
+  <select class="footer-lang">
+    <option>English</option>
+    <option>हिन्दी</option>
+    <option>தமிழ்</option>
+    <option>తెలుగు</option>
+  </select>
+  <p class="footer-copy">Netflix India</p>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal" onclick="closeModalBg(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-hero">
+      <div class="modal-hero-bg" id="modal-emoji"></div>
+      <div class="modal-hero-gradient"></div>
+      <div style="position:absolute;inset:0;z-index:0" id="modal-bg-color"></div>
+      <div class="modal-hero-content">
+        <div class="modal-hero-title" id="modal-title"></div>
+        <div class="modal-hero-btns">
+          <button class="btn-play" style="padding:8px 20px;font-size:.9rem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#000"><polygon points="5,3 19,12 5,21"/></svg>
+            Play
+          </button>
+          <button class="btn-info" style="padding:8px 18px;font-size:.9rem">+ My List</button>
+          <button class="btn-info" style="padding:8px 14px;font-size:.9rem">👍</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta">
+        <span class="modal-match" id="modal-match"></span>
+        <span id="modal-year"></span>
+        <span id="modal-seasons"></span>
+        <span id="modal-rating-badge" style="border:1px solid rgba(255,255,255,.4);padding:1px 6px;font-size:.75rem"></span>
+      </div>
+      <p class="modal-desc" id="modal-desc"></p>
+      <p class="modal-tags" id="modal-tags"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────
+const SHOWS = {
+  stranger: { title:"Stranger Things", emoji:"🔦", color:"#1a0a2e", match:"98%", year:"2022", seasons:"4 Seasons", rating:"TV-14", desc:"When a boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one very strange little girl.", tags:"Supernatural · Drama · 80s Nostalgia" },
+  squid: { title:"Squid Game", emoji:"🎭", color:"#0a1f0d", match:"97%", year:"2021", seasons:"2 Seasons", rating:"TV-MA", desc:"Hundreds of cash-strapped players accept a strange invitation to compete in children's games — with life-or-death stakes.", tags:"Thriller · Drama · Korean" },
+  wednesday: { title:"Wednesday", emoji:"🖤", color:"#0d0d0d", match:"95%", year:"2022", seasons:"2 Seasons", rating:"TV-14", desc:"Smart, sarcastic and a little dead inside, Wednesday Addams investigates a murder spree while making new friends at Nevermore Academy.", tags:"Dark Comedy · Mystery · Supernatural" },
+  witcher: { title:"The Witcher", emoji:"⚔️", color:"#0a1420", match:"94%", year:"2019", seasons:"3 Seasons", rating:"TV-MA", desc:"Geralt of Rivia, a solitary monster hunter, struggles to find his place in a world where people often prove more wicked than beasts.", tags:"Fantasy · Action · Adventure" },
+  money: { title:"Money Heist", emoji:"🔴", color:"#1a0505", match:"96%", year:"2017", seasons:"5 Seasons", rating:"TV-MA", desc:"Eight thieves take hostages and lock themselves in the Royal Mint of Spain as a criminal mastermind manipulates the police.", tags:"Heist · Thriller · Spanish" },
+  ozark: { title:"Ozark", emoji:"💰", color:"#050e14", match:"93%", year:"2017", seasons:"4 Seasons", rating:"TV-MA", desc:"A financial adviser drags his family from Chicago to the Missouri Ozarks, where he must launder $500 million in five years to appease a drug boss.", tags:"Crime · Drama · Thriller" },
+  dark: { title:"Dark", emoji:"🌀", color:"#080814", match:"96%", year:"2017", seasons:"3 Seasons", rating:"TV-MA", desc:"A family saga with a supernatural twist, set in a German town where the disappearance of two children exposes the relationships among four families.", tags:"Sci-Fi · Mystery · German · Time Travel" },
+  crown: { title:"The Crown", emoji:"👑", color:"#1a140a", match:"91%", year:"2016", seasons:"6 Seasons", rating:"TV-MA", desc:"This drama follows the political rivalries and romances of Queen Elizabeth II's reign and the events that shaped the second half of the 20th century.", tags:"Historical Drama · Biography · British" },
+  bbridge: { title:"Bridgerton", emoji:"🌹", color:"#14080a", match:"90%", year:"2020", seasons:"3 Seasons", rating:"TV-MA", desc:"Wealth, lust and betrayal set against the backdrop of Regency-era London's competitive marriage season in this smart, sexy, funny series.", tags:"Romance · Drama · Period" },
+  lupin: { title:"Lupin", emoji:"🎩", color:"#0a100a", match:"95%", year:"2021", seasons:"3 Seasons", rating:"TV-14", desc:"Inspired by the adventures of Arsène Lupin, gentleman thief Assane Diop sets out to avenge his father's humiliation by a wealthy family.", tags:"Heist · Drama · French" },
+  cobra: { title:"Cobra Kai", emoji:"🥋", color:"#0d0a00", match:"92%", year:"2018", seasons:"6 Seasons", rating:"TV-14", desc:"Decades after the 1984 All Valley Karate Tournament, a down-and-out Johnny Lawrence seeks redemption by reopening the Cobra Kai dojo.", tags:"Action · Drama · Martial Arts" },
+  peaky: { title:"Peaky Blinders", emoji:"🎩", color:"#0a0805", match:"97%", year:"2013", seasons:"6 Seasons", rating:"TV-MA", desc:"A gangster family epic set in 1900s England, centering on a crime family operating in Birmingham and their ambitious head Tommy Shelby.", tags:"Crime · Drama · Historical · British" },
+};
+
+// Color palettes for generated cards
+const PALETTES = [
+  {bg:"#1a0a2e",fg:"#7b2ff7",text:"#c9a0ff"},
+  {bg:"#0a1f0d",fg:"#46d369",text:"#a0ffb8"},
+  {bg:"#1a0505",fg:"#e50914",text:"#ffaaaa"},
+  {bg:"#050e14",fg:"#1e90ff",text:"#9ecfff"},
+  {bg:"#0d0a00",fg:"#f5a623",text:"#ffe0a0"},
+  {bg:"#1a1a2e",fg:"#e040fb",text:"#f3b0ff"},
+  {bg:"#0d1a0a",fg:"#00e5ff",text:"#a0f0ff"},
+  {bg:"#14080a",fg:"#ff6b6b",text:"#ffcccc"},
+  {bg:"#080814",fg:"#7986cb",text:"#c5cae9"},
+  {bg:"#0a100a",fg:"#26a69a",text:"#b2dfdb"},
+  {bg:"#1a1408",fg:"#ffd54f",text:"#fff9c4"},
+  {bg:"#10080e",fg:"#f06292",text:"#fce4ec"},
+];
+
+const KEYS = Object.keys(SHOWS);
+
+function mkCard(key, isTop10=false, rank=0) {
+  const s = SHOWS[key] || SHOWS[KEYS[Math.floor(Math.random()*KEYS.length)]];
+  const pal = PALETTES[Math.floor(Math.random()*PALETTES.length)];
+  const el = document.createElement('div');
+  el.className = 'card' + (isTop10?' top10':'');
+  el.innerHTML = `
+    <div class="card-poster" style="background:linear-gradient(135deg,${pal.bg} 0%,#000 100%);color:${pal.text};position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(2rem,5vw,3.5rem);opacity:.7">${s.emoji}</div>
+      <span style="position:relative;z-index:1;font-size:.68rem;padding:0 8px;text-align:center;line-height:1.2">${s.title}</span>
+    </div>
+    ${isTop10?`<div class="top10-num">${rank}</div>`:''}
+    <div class="card-overlay">
+      <div class="card-actions">
+        <button class="ca-btn play-sm" title="Play">▶</button>
+        <button class="ca-btn" title="Add to list">+</button>
+        <button class="ca-btn" title="Like">👍</button>
+        <button class="ca-btn" title="More info" style="margin-left:auto">⌄</button>
+      </div>
+      <div class="card-info">
+        <div class="card-match">${s.match} Match</div>
+        <div class="card-tags">${s.tags.split('·')[0].trim()} · ${s.tags.split('·')[1]?.trim()||''}</div>
+      </div>
+    </div>`;
+  el.onclick = () => openModal(key);
+  return el;
+}
+
+function buildRow(id, keys, isTop10=false) {
+  const row = document.getElementById(id);
+  keys.forEach((k,i) => row.appendChild(mkCard(k, isTop10, i+1)));
+}
+
+const continueKeys  = ['stranger','squid','wednesday','witcher','money','ozark','dark','crown'];
+const top10Keys     = ['squid','witcher','stranger','money','dark','wednesday','peaky','cobra','lupin','ozark'];
+const trendingKeys  = ['lupin','cobra','bbridge','peaky','crown','ozark','dark','money','stranger','witcher'];
+const originals     = ['wednesday','squid','stranger','ozark','lupin','bbridge','cobra','crown'];
+const popular       = ['peaky','dark','witcher','money','crown','lupin','bbridge','cobra'];
+const because       = ['dark','ozark','lupin','money','witcher','peaky','cobra','crown'];
+
+buildRow('row-continue',  continueKeys);
+buildRow('row-top10',     top10Keys, true);
+buildRow('row-trending',  trendingKeys);
+buildRow('row-originals', originals);
+buildRow('row-popular',   popular);
+buildRow('row-because',   because);
+
+// ─── SCROLL ───────────────────────────────────────────────────
+function scroll(btn, dir) {
+  const wrap = btn.closest('.slider-wrap');
+  const slider = wrap.querySelector('.slider');
+  const cardW = slider.querySelector('.card').offsetWidth + 5;
+  slider.scrollBy({ left: dir * cardW * 4, behavior: 'smooth' });
+}
+
+// ─── NAV ──────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ─── GENRE PILLS ──────────────────────────────────────────────
+document.querySelectorAll('.genre-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.genre-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+  });
+});
+
+// ─── FAQ ──────────────────────────────────────────────────────
+function toggleFaq(btn) {
+  const ans = btn.nextElementSibling;
+  const icon = btn.querySelector('.faq-icon');
+  const open = ans.classList.toggle('open');
+  icon.textContent = open ? '×' : '+';
+  icon.style.transform = open ? 'rotate(0deg)' : '';
+}
+
+// ─── MODAL ────────────────────────────────────────────────────
+function openModal(key) {
+  const s = SHOWS[key] || SHOWS['stranger'];
+  document.getElementById('modal-title').textContent = s.title;
+  document.getElementById('modal-match').textContent = s.match + ' Match';
+  document.getElementById('modal-year').textContent = s.year;
+  document.getElementById('modal-seasons').textContent = s.seasons;
+  document.getElementById('modal-rating-badge').textContent = s.rating;
+  document.getElementById('modal-desc').textContent = s.desc;
+  document.getElementById('modal-tags').innerHTML = `<span>Genre: </span>${s.tags}`;
+  document.getElementById('modal-emoji').textContent = s.emoji;
+  document.getElementById('modal-bg-color').style.background = `linear-gradient(135deg, ${s.color} 0%, #000 100%)`;
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalBg(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>
